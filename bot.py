@@ -87,14 +87,22 @@ async def stop_break(ctx):
 @bot.command(name="디데이매니절")
 async def dday(ctx):
     now = datetime.now(ZoneInfo("Asia/Seoul"))
+    today_str = now.strftime("%m월 %d일")  # 예: "03월 30일"
+    
     messages = []
     for name, date in d_day_dates.items():
         remaining = (date - now).days
         messages.append(f"{name}까지 {remaining}일")
-    message = "GIRL!!! 나한테 D-DAY를 물어본거야?! \n정신 좀 차렸네 드디어💜 알다시피 시간이 없어!\n\n" + \
-        ", \n".join(messages) + " 남았어!\n\n열심히 해야겠지? KEEP GOING BITCHES!!!"
+    
+    message = (
+        f"GIRL!!! 나한테 D-DAY를 물어본거야?! \n"
+        f"정신 좀 차렸네 드디어💜 알다시피 시간이 없어!\n\n"
+        f"오늘은 너가 알다시피 {today_str}이야! 그말이 뭔지 알아?\n\n"  # ✅ 오늘 날짜 추가!
+        + ", \n".join(messages) +
+        " 남았다는 소리야!\n\n열심히 해야겠지? KEEP GOING BITCHES!!!"
+    )
+    
     await ctx.send(message)
-
 
 @bot.command(name="매니절들집합")
 async def command_list(ctx):

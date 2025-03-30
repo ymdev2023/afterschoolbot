@@ -1,0 +1,7 @@
+# fly.toml
+app = "afterschoolbot"
+
+[build]
+
+[env]
+  PORT = "8080"

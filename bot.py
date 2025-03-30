@@ -1,0 +1,118 @@
+import asyncio
+import discord
+from discord.ext import commands
+from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+
+intents = discord.Intents.default()
+intents.message_content = True  # 텍스트 명령어 감지용
+bot = commands.Bot(command_prefix="/", intents=intents)
+
+# 📅 디데이 날짜 설정
+d_day_dates = {
+    "공통교과 기획서 마감":  datetime(2025, 4, 7),
+    "심화공통 영상 마감":  datetime(2025, 4, 8),
+    "내부2차발표(데모포함)": datetime(2025, 4, 9),
+    # "Unite Seoul 2025": datetime(2025, 4, 15),
+    "기획발표": datetime(2025, 4, 17)
+}
+
+# ⏰ 쉬는시간 알림 상태
+break_reminder_active = False
+break_task = None
+
+
+async def break_reminder_loop(ctx):
+    await asyncio.sleep(60 * 60)  # 첫 알림까지 1시간 대기
+
+    while break_reminder_active:
+        now = datetime.now().strftime("%H시 %M분")
+        await ctx.send(
+            f"⏰ 지금은 {now}이야! 쉬는시간이라구! 다들 키보드에서 손 떼!!!!! 건강 챙기지 못해?!?!??!\n"
+            f"딱 15분만 쉬도록 해? 절제하는 것, 그것이? QUEEN의? MIND!💖"
+        )
+
+        await asyncio.sleep(15 * 60)  # 쉬는시간
+
+        now_work = datetime.now().strftime("%H시 %M분")
+        await ctx.send(
+            f"💼 {now_work}! 타임 오버! 👠 쉬는시간 끝! 이제 다시 집중하는 거 알지?\n15분 동안 충분히 쉬었잖아? 키보드에 손 다시 올려! ✋💻\n"
+            f"내가 항상 말하지? 게으름은 용서 못 해!!! 그것이? QUEEN의? MIND!!🔥"
+        )
+
+        await asyncio.sleep(60 * 60)  # 다음 알림까지 1시간 대기
+
+
+@bot.command(name="쉬는시간매니절")
+async def start_break(ctx):
+    global break_reminder_active, break_task
+    if not break_reminder_active:
+        break_reminder_active = True
+        break_task = asyncio.create_task(break_reminder_loop(ctx))
+
+        now = datetime.now()
+        now_str = now.strftime("%H시 %M분")
+        next_alert = now + timedelta(minutes=60)
+        next_alert_str = next_alert.strftime("%H시 %M분")
+        print("📣 쉬는시간매니절 출근 상태: True")
+
+        await ctx.send(
+            f"나 불렀어?! 쉬는시간매니절 {now_str}에 출근했어!💜\n"
+            f"앞으로 1시간 뒤인 {next_alert_str}에 알려줄게.\n"
+            f"내가 알려주면, 당장 키보드에서 손 떼는거야?!"
+        )
+    else:
+        print("⚠️ 쉬는시간매니절 이미 출근 중")
+        await ctx.send("이미 쉬는시간 알림이 실행 중이야! 정신차려 BITCH!!!!")
+
+
+@bot.command(name="쉬는시간매니절퇴근해")
+async def stop_break(ctx):
+    global break_reminder_active, break_task
+    if break_reminder_active:
+        break_reminder_active = False
+        if break_task:
+            break_task.cancel()
+        print("📣 쉬는시간매니절 퇴근 상태: False")
+        await ctx.send("이제야 퇴근시켜 주는거야?! 적정근로시간 개념은 어디간거야?! \n하지만 고마워. 다음에 보자!!💜")
+    else:
+        print("⚠️ 쉬는시간매니절 이미 퇴근 상태")
+        await ctx.send("나 이미 퇴근했어! 정신차려 BITCH!")
+
+
+@bot.command(name="디데이매니절")
+async def dday(ctx):
+    now = datetime.now()
+    messages = []
+    for name, date in d_day_dates.items():
+        remaining = (date - now).days
+        messages.append(f"{name}까지 {remaining}일")
+    message = "GIRL!!! 나한테 D-DAY를 물어본거야?! \n정신 좀 차렸네 드디어💜 알다시피 시간이 없어!\n\n" + \
+        ", \n".join(messages) + " 남았어!\n\n열심히 해야겠지? KEEP GOING BITCHES!!!"
+    await ctx.send(message)
+
+
+@bot.command(name="매니절들집합")
+async def command_list(ctx):
+    message = (
+        "안녕! 우린 팀 퀸가비야! 이 거지같은 곳에서 근무하게 됐어! 잘 부탁해?!?!\n방금 우리 불렀어? 걱정마! 우리 잘 대기하고 있어! \n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        "`/디데이매니절` : 디데이까지 며칠 남았는지 알려줄거야💜\n"
+        "`/쉬는시간매니절` : 쉬는시간 매니절가 1시간마다 쉬는시간을 알려줄거야💜\n"
+        "`/쉬는시간매니절퇴근해` : 쉬는시간 매니절 퇴근해서 쉬는시간 이제 못알려줘💜\n"
+        "`/매니절들집합` : 매니절들을 어떻게 부려먹는지 알려줄거야!💜\n"
+    )
+    await ctx.send(message)
+
+
+@bot.event
+async def on_ready():
+    print(f"✅ {bot.user} 봇 실행됨!")
+
+
+# 토큰 입력
+bot.run(TOKEN)

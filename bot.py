@@ -109,9 +109,17 @@ async def command_list(ctx):
     await ctx.send(message)
 
 
+bot_is_ready = False  # 전역 변수로 선언
+
+
 @bot.event
 async def on_ready():
-    print(f"✅ {bot.user} 봇 실행됨!")
+    global bot_is_ready
+    if not bot_is_ready:
+        bot_is_ready = True
+        print(f"✅ {bot.user} 봇 실행됨!")
+    else:
+        print("⚠️ 이미 실행된 봇입니다. 중복 실행 방지됨.")
 
 
 # 토큰 입력

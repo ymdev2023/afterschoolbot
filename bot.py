@@ -2,6 +2,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import os
 from dotenv import load_dotenv
 
@@ -27,10 +28,9 @@ break_task = None
 
 
 async def break_reminder_loop(ctx):
-    await asyncio.sleep(60 * 60)  # 첫 알림까지 1시간 대기
-
+    await asyncio.sleep(60 * 60)
     while break_reminder_active:
-        now = datetime.now().strftime("%H시 %M분")
+        now = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%H시 %M분")
         await ctx.send(
             f"⏰ 지금은 {now}이야! 쉬는시간이라구! 다들 키보드에서 손 떼!!!!! 건강 챙기지 못해?!?!??!\n"
             f"딱 15분만 쉬도록 해? 절제하는 것, 그것이? QUEEN의? MIND!💖"
@@ -38,7 +38,7 @@ async def break_reminder_loop(ctx):
 
         await asyncio.sleep(15 * 60)  # 쉬는시간
 
-        now_work = datetime.now().strftime("%H시 %M분")
+        now_work = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%H시 %M분")
         await ctx.send(
             f"💼 {now_work}! 타임 오버! 👠 쉬는시간 끝! 이제 다시 집중하는 거 알지?\n15분 동안 충분히 쉬었잖아? 키보드에 손 다시 올려! ✋💻\n"
             f"내가 항상 말하지? 게으름은 용서 못 해!!! 그것이? QUEEN의? MIND!!🔥"
@@ -54,7 +54,7 @@ async def start_break(ctx):
         break_reminder_active = True
         break_task = asyncio.create_task(break_reminder_loop(ctx))
 
-        now = datetime.now()
+        now = datetime.now(ZoneInfo("Asia/Seoul"))
         now_str = now.strftime("%H시 %M분")
         next_alert = now + timedelta(minutes=60)
         next_alert_str = next_alert.strftime("%H시 %M분")
@@ -86,7 +86,7 @@ async def stop_break(ctx):
 
 @bot.command(name="디데이매니절")
 async def dday(ctx):
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Asia/Seoul"))
     messages = []
     for name, date in d_day_dates.items():
         remaining = (date - now).days

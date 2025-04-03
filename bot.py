@@ -18,9 +18,10 @@ d_day_dates = {
     "공통교과 기획서 마감": datetime(2025, 4, 7, tzinfo=ZoneInfo("Asia/Seoul")),
     "심화공통 영상 마감": datetime(2025, 4, 8, tzinfo=ZoneInfo("Asia/Seoul")),
     "내부2차발표(데모포함)": datetime(2025, 4, 9, tzinfo=ZoneInfo("Asia/Seoul")),
+    "Unite Seoul 2025": datetime(2025, 4, 15, tzinfo=ZoneInfo("Asia/Seoul")),
+    "발표자료 제출 마감(빨리 제출 시 여유) 및 리허설(~18시)": datetime(2025, 4, 16, tzinfo=ZoneInfo("Asia/Seoul")),
     "기획발표": datetime(2025, 4, 17, tzinfo=ZoneInfo("Asia/Seoul")),
-    # "Unite Seoul 2025": datetime(2025, 4, 15, tzinfo=ZoneInfo("Asia/Seoul")),
-    "바우처 결과 보고서 마감": datetime(2025, 4, 25, tzinfo=ZoneInfo("Asia/Seoul")),
+    "바우처 결과 보고서 마감(인강들어)": datetime(2025, 4, 25, tzinfo=ZoneInfo("Asia/Seoul")),
 }
 
 # ⏰ 쉬는시간 알림 상태

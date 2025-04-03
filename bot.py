@@ -1,6 +1,6 @@
 import asyncio
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
@@ -10,7 +10,7 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 intents = discord.Intents.default()
-intents.message_content = True  # 텍스트 명령어 감지용
+intents.message_content = True
 bot = commands.Bot(command_prefix="/", intents=intents)
 
 # 📅 디데이 날짜 설정
@@ -18,13 +18,40 @@ d_day_dates = {
     "공통교과 기획서 마감": datetime(2025, 4, 7, tzinfo=ZoneInfo("Asia/Seoul")),
     "심화공통 영상 마감": datetime(2025, 4, 8, tzinfo=ZoneInfo("Asia/Seoul")),
     "내부2차발표(데모포함)": datetime(2025, 4, 9, tzinfo=ZoneInfo("Asia/Seoul")),
-    # "Unite Seoul 2025": datetime(2025, 4, 15, tzinfo=ZoneInfo("Asia/Seoul")),
     "기획발표": datetime(2025, 4, 17, tzinfo=ZoneInfo("Asia/Seoul")),
+    # "Unite Seoul 2025": datetime(2025, 4, 15, tzinfo=ZoneInfo("Asia/Seoul")),
+    "바우처 결과 보고서 마감": datetime(2025, 4, 25, tzinfo=ZoneInfo("Asia/Seoul")),
 }
 
 # ⏰ 쉬는시간 알림 상태
 break_reminder_active = False
 break_task = None
+
+# ✅ 자동 디데이 알림 루프
+
+
+@tasks.loop(minutes=1)
+async def auto_dday_notice():
+    now = datetime.now(ZoneInfo("Asia/Seoul"))
+    if now.hour == 10 and now.minute == 0:
+        for guild in bot.guilds:
+            for channel in guild.text_channels:
+                if channel.permissions_for(guild.me).send_messages:
+                    today_str = now.strftime("%m월 %d일")
+                    messages = []
+                    for name, date in d_day_dates.items():
+                        remaining = (date - now).days
+                        messages.append(f"{name}까지 {remaining}일")
+                    message = (
+                        f"GIRL!!! 디데이 리마인드 시간이야!!! 💜\n"
+                        f"오늘은 {today_str}이야!\n\n" +
+                        ", \n".join(messages) +
+                        " 남았다는 소리야!\n\n오늘도 달려보자! QUEEN의 MIND!!🔥"
+                    )
+                    await channel.send(message)
+                    break
+
+# ✅ 쉬는시간 루프
 
 
 async def break_reminder_loop(ctx):
@@ -36,7 +63,7 @@ async def break_reminder_loop(ctx):
             f"딱 15분만 쉬도록 해? 절제하는 것, 그것이? QUEEN의? MIND!💖"
         )
 
-        await asyncio.sleep(15 * 60)  # 쉬는시간
+        await asyncio.sleep(15 * 60)
 
         now_work = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%H시 %M분")
         await ctx.send(
@@ -44,7 +71,9 @@ async def break_reminder_loop(ctx):
             f"내가 항상 말하지? 게으름은 용서 못 해!!! 그것이? QUEEN의? MIND!!🔥"
         )
 
-        await asyncio.sleep(60 * 60)  # 다음 알림까지 1시간 대기
+        await asyncio.sleep(60 * 60)
+
+# ✅ 쉬는시간 시작
 
 
 @bot.command(name="쉬는시간매니절")
@@ -69,6 +98,8 @@ async def start_break(ctx):
         print("⚠️ 쉬는시간매니절 이미 출근 중")
         await ctx.send("이미 쉬는시간 알림이 실행 중이야! 정신차려 BITCH!!!!")
 
+# ✅ 쉬는시간 퇴근
+
 
 @bot.command(name="쉬는시간매니절퇴근해")
 async def stop_break(ctx):
@@ -83,26 +114,31 @@ async def stop_break(ctx):
         print("⚠️ 쉬는시간매니절 이미 퇴근 상태")
         await ctx.send("나 이미 퇴근했어! 정신차려 BITCH!")
 
+# ✅ 디데이 수동 호출
+
 
 @bot.command(name="디데이매니절")
 async def dday(ctx):
     now = datetime.now(ZoneInfo("Asia/Seoul"))
-    today_str = now.strftime("%m월 %d일")  # 예: "03월 30일"
-    
+    today_str = now.strftime("%m월 %d일")
+
     messages = []
     for name, date in d_day_dates.items():
         remaining = (date - now).days
         messages.append(f"{name}까지 {remaining}일")
-    
+
     message = (
         f"GIRL!!! 나한테 D-DAY를 물어본거야?! \n"
         f"정신 좀 차렸네 드디어💜 알다시피 시간이 없어!\n\n"
-        f"오늘은 너가 알다시피 {today_str}이야! 그말이 뭔지 알아?\n\n"  # ✅ 오늘 날짜 추가!
-        + ", \n".join(messages) +
+        f"오늘은 너가 알다시피 {today_str}이야! 그말이 뭔지 알아?\n\n" +
+        ", \n".join(messages) +
         " 남았다는 소리야!\n\n열심히 해야겠지? KEEP GOING BITCHES!!!"
     )
-    
+
     await ctx.send(message)
+
+# ✅ 명령어 목록
+
 
 @bot.command(name="매니절들집합")
 async def command_list(ctx):
@@ -116,8 +152,8 @@ async def command_list(ctx):
     )
     await ctx.send(message)
 
-
-bot_is_ready = False  # 전역 변수로 선언
+# ✅ 봇 on_ready 시 실행
+bot_is_ready = False
 
 
 @bot.event
@@ -126,9 +162,9 @@ async def on_ready():
     if not bot_is_ready:
         bot_is_ready = True
         print(f"✅ {bot.user} 봇 실행됨!")
+        auto_dday_notice.start()
     else:
         print("⚠️ 이미 실행된 봇입니다. 중복 실행 방지됨.")
 
-
-# 토큰 입력
+# ✅ 봇 실행
 bot.run(TOKEN)
